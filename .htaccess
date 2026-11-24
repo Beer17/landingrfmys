@@ -1,0 +1,180 @@
+# ==============================================================================
+# .htaccess — Rafael Mayorga Santos | Landing Page
+# Servidor: Apache 2.4+
+# Descripción: Configuración de rendimiento, seguridad y SEO para hosting
+#              compartido (cPanel / DirectAdmin / Namecheap / GoDaddy).
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# 1. MOTOR DE REESCRITURA DE URLs (mod_rewrite)
+#    Redirige HTTP → HTTPS y elimina www. para URL canónica limpia.
+# ------------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Forzar HTTPS — redirigir todo el tráfico no seguro
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Redirigir www → sin www (URL canónica)
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+    # Eliminar la extensión .html de las URLs
+    # (ej. /servicios.html → /servicios)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.html -f
+    RewriteRule ^(.*)$ $1.html [L]
+</IfModule>
+
+
+# ------------------------------------------------------------------------------
+# 2. CABECERAS DE SEGURIDAD HTTP
+#    Protegen contra ataques XSS, clickjacking, MIME sniffing, etc.
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+
+    # Política de seguridad de contenido — solo recursos del propio dominio
+    # y CDNs explícitamente declarados (Tailwind CDN + Google Fonts)
+    Header set Content-Security-Policy "\
+        default-src 'self'; \
+        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; \
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+        font-src 'self' https://fonts.gstatic.com; \
+        img-src 'self' data: https:; \
+        connect-src 'self'; \
+        frame-ancestors 'none';"
+
+    # Prevenir que el sitio sea cargado en iframes (clickjacking)
+    Header always set X-Frame-Options "DENY"
+
+    # Forzar al navegador a respetar el Content-Type declarado
+    Header set X-Content-Type-Options "nosniff"
+
+    # Habilitar filtro XSS en navegadores legacy
+    Header set X-XSS-Protection "1; mode=block"
+
+    # Referrer Policy — no enviar cabecera Referer a sitios externos
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Permissions Policy — deshabilitar APIs sensibles no utilizadas
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+
+    # HSTS — forzar HTTPS por 1 año (solo activar si SSL está configurado)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Eliminar cabecera que revela versión de Apache
+    Header unset X-Powered-By
+    Header unset Server
+</IfModule>
+
+
+# ------------------------------------------------------------------------------
+# 3. CACHÉ DEL NAVEGADOR (mod_expires)
+#    Mejora el rendimiento Lighthouse al definir TTL por tipo de recurso.
+# ------------------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # HTML — sin caché (siempre fresco)
+    ExpiresByType text/html                  "access plus 0 seconds"
+
+    # CSS y JavaScript — 1 mes (usar cache-busting con query string al actualizar)
+    ExpiresByType text/css                   "access plus 1 month"
+    ExpiresByType application/javascript     "access plus 1 month"
+    ExpiresByType text/javascript            "access plus 1 month"
+
+    # Imágenes — 6 meses
+    ExpiresByType image/webp                 "access plus 6 months"
+    ExpiresByType image/jpeg                 "access plus 6 months"
+    ExpiresByType image/png                  "access plus 6 months"
+    ExpiresByType image/gif                  "access plus 6 months"
+    ExpiresByType image/svg+xml              "access plus 6 months"
+    ExpiresByType image/x-icon              "access plus 1 year"
+    ExpiresByType image/vnd.microsoft.icon  "access plus 1 year"
+
+    # Fuentes — 1 año (raramente cambian)
+    ExpiresByType font/woff                  "access plus 1 year"
+    ExpiresByType font/woff2                 "access plus 1 year"
+    ExpiresByType application/font-woff      "access plus 1 year"
+    ExpiresByType application/font-woff2     "access plus 1 year"
+
+    # Otros
+    ExpiresByType application/pdf            "access plus 1 month"
+</IfModule>
+
+
+# ------------------------------------------------------------------------------
+# 4. COMPRESIÓN GZIP (mod_deflate)
+#    Reduce el tamaño de transferencia de texto entre 60-80%.
+# ------------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/plain
+
+    # No comprimir recursos ya comprimidos
+    SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png|webp|woff2?)$ no-gzip
+</IfModule>
+
+
+# ------------------------------------------------------------------------------
+# 5. PÁGINAS DE ERROR PERSONALIZADAS
+#    Mantiene la experiencia de usuario incluso ante errores del servidor.
+# ------------------------------------------------------------------------------
+ErrorDocument 400 /index.html
+ErrorDocument 403 /index.html
+ErrorDocument 404 /index.html
+ErrorDocument 500 /index.html
+
+
+# ------------------------------------------------------------------------------
+# 6. PROTEGER ARCHIVOS SENSIBLES
+#    Bloquea el acceso directo a archivos de configuración.
+# ------------------------------------------------------------------------------
+<FilesMatch "^\.">
+    # Bloquear acceso a archivos ocultos (.htaccess, .env, .gitignore, etc.)
+    Order allow,deny
+    Deny from all
+    Satisfy All
+</FilesMatch>
+
+# Proteger archivos de configuración específicos
+<FilesMatch "(^#.*#|\.(bak|conf|dist|fla|inc|ini|log|orig|psd|sh|sql|sw[op])|~)$">
+    Order allow,deny
+    Deny from all
+    Satisfy All
+</FilesMatch>
+
+
+# ------------------------------------------------------------------------------
+# 7. CHARSET Y MIME TYPES
+#    Asegura que el navegador interprete correctamente el contenido.
+# ------------------------------------------------------------------------------
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+    AddType text/html                         .html .htm
+    AddType text/css                          .css
+    AddType application/javascript            .js
+    AddType image/webp                        .webp
+    AddType image/svg+xml                     .svg
+    AddType font/woff                         .woff
+    AddType font/woff2                        .woff2
+    AddType application/json                  .json
+</IfModule>
+
+
+# ------------------------------------------------------------------------------
+# 8. OPCIONES DE DIRECTORIO
+#    Desactivar listado de archivos por seguridad.
+# ------------------------------------------------------------------------------
+Options -Indexes -MultiViews
+Options +FollowSymLinks

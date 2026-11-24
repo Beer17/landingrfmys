@@ -1,0 +1,369 @@
+/* ==========================================================================
+   LANDING PAGE — Rafael Mayorga Santos
+   Archivo: style.css
+   Descripción: Estilos personalizados que complementan Tailwind CSS.
+   Incluye variables CSS, tipografía, animaciones, utilidades y componentes
+   específicos que Tailwind no cubre de forma nativa.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. VARIABLES CSS GLOBALES (Design Tokens)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Paleta de color de marca */
+  --color-navy-800:  #132644;
+  --color-navy-900:  #0B172A;
+  --color-navy-950:  #060D19;
+  --color-gold-400:  #E2B86B;
+  --color-gold-500:  #C59B48;
+  --color-gold-600:  #A67E32;
+
+  /* Tipografía */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans:  'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* Espaciado base (8-point grid) */
+  --space-xs:  0.5rem;    /*  8px */
+  --space-sm:  1rem;      /* 16px */
+  --space-md:  1.5rem;    /* 24px */
+  --space-lg:  2.5rem;    /* 40px */
+  --space-xl:  4rem;      /* 64px */
+  --space-2xl: 7rem;      /* 112px */
+
+  /* Bordes y radios */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* Transición estándar */
+  --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET Y BASE
+   -------------------------------------------------------------------------- */
+
+/* Scroll suave nativo para todos los navegadores */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Bloquear scroll horizontal sin romper posicionamiento */
+body {
+  overflow-x: hidden;
+}
+
+/* Mejorar la caja de selección de texto en toda la página */
+::selection {
+  background-color: var(--color-gold-500);
+  color: #fff;
+}
+
+/* Scroll-padding para compensar el header fijo al navegar con anclas */
+html {
+  scroll-padding-top: 80px; /* Altura del header */
+}
+
+/* --------------------------------------------------------------------------
+   3. TIPOGRAFÍA EDITORIAL
+   Usamos Playfair Display para encabezados (autoridad visual) y
+   Plus Jakarta Sans para cuerpo de texto (legibilidad ejecutiva).
+   -------------------------------------------------------------------------- */
+
+/* Clase auxiliar: texto serif ya configurada en Tailwind; aquí reforzamos */
+.font-serif {
+  font-family: var(--font-serif);
+  font-feature-settings: "liga" 1, "kern" 1; /* Ligaduras tipográficas */
+}
+
+/* Mejora de tracking en etiquetas de sección */
+.section-label {
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   4. HEADER & NAVEGACIÓN
+   -------------------------------------------------------------------------- */
+
+/* Sombra sutil que aparece al hacer scroll (controlada por JS) */
+header.scrolled {
+  box-shadow: 0 2px 32px rgba(6, 13, 25, 0.60);
+}
+
+/* Estado activo del enlace de navegación — resaltado con subrayado dorado */
+nav a.active {
+  color: var(--color-gold-400);
+  position: relative;
+}
+
+nav a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-gold-500);
+  border-radius: 999px;
+}
+
+/* --------------------------------------------------------------------------
+   5. SECCIÓN HERO
+   -------------------------------------------------------------------------- */
+
+/* Patrón de puntos sutil sobre el fondo oscuro */
+#inicio {
+  background-image:
+    radial-gradient(ellipse at top right, #132644 0%, #060D19 65%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E2B86B' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: cover, 60px 60px;
+}
+
+/* Línea divisoria degradada inferior del hero */
+#inicio::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-gold-500) 40%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   6. TARJETAS DE SERVICIOS
+   Efecto hover: transición suave de fondo claro → azul marino oscuro
+   con cambios coordinados en iconos y texto.
+   -------------------------------------------------------------------------- */
+
+.service-card {
+  transition: background-color var(--transition),
+              box-shadow var(--transition),
+              border-color var(--transition),
+              transform var(--transition);
+  will-change: transform; /* Hint al navegador para optimizar la animación */
+}
+
+.service-card:hover {
+  transform: translateY(-4px); /* Elevación sutil al hacer hover */
+}
+
+/* --------------------------------------------------------------------------
+   7. ACORDEÓN FAQ
+   Animación de altura con max-height para compatibilidad universal.
+   -------------------------------------------------------------------------- */
+
+.faq-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.35s ease;
+}
+
+/* Estado abierto (controlado por JS añadiendo la clase .open) */
+.faq-content.open {
+  max-height: 500px; /* Valor suficientemente alto para cualquier respuesta */
+}
+
+/* Icono rotado cuando el acordeón está abierto */
+.faq-icon.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* --------------------------------------------------------------------------
+   8. FORMULARIO DE CONTACTO
+   -------------------------------------------------------------------------- */
+
+/* Campo de formulario — foco con anillo dorado */
+.form-field:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(197, 155, 72, 0.25);
+  border-color: var(--color-gold-500);
+}
+
+/* Estado de error en campo */
+.form-field.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   9. BOTÓN FLOTANTE (CTA persistente)
+   El botón de "Cotizar mi caso" flota en la esquina inferior derecha.
+   -------------------------------------------------------------------------- */
+
+.floating-cta {
+  /* Pulsación suave para llamar la atención sin ser intrusiva */
+  animation: float-pulse 3s ease-in-out infinite;
+}
+
+@keyframes float-pulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-3px) scale(1.02); }
+}
+
+/* Desactivar animación cuando el usuario prefiere movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .floating-cta {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. MODAL DE PRIVACIDAD
+   -------------------------------------------------------------------------- */
+
+#privacy-modal {
+  transition: opacity var(--transition);
+}
+
+#privacy-modal.hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Contenido del modal con entrada animada */
+#privacy-modal > div {
+  animation: modal-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes modal-in {
+  from { transform: scale(0.92) translateY(12px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   11. INDICADOR DE PUNTO VIVO (Badge "Protección Estratégica...")
+   -------------------------------------------------------------------------- */
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  50%       { opacity: 0.6; transform: scale(1.4);  }
+}
+
+.animate-pulse {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* --------------------------------------------------------------------------
+   12. UTILIDADES DE IMAGEN Y MEDIOS
+   -------------------------------------------------------------------------- */
+
+/* Contenedor de imagen con aspecto fijo y overflow controlado */
+.img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top; /* Priorizar la cara en fotos de perfil */
+}
+
+/* Placeholder avatar cuando no hay foto de perfil */
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+/* --------------------------------------------------------------------------
+   13. SECCIÓN INTERNACIONAL — Tarjetas de jurisdicción
+   -------------------------------------------------------------------------- */
+
+.jurisdiction-card {
+  transition: border-color var(--transition),
+              box-shadow var(--transition);
+}
+
+.jurisdiction-card:hover {
+  box-shadow: 0 0 0 1px var(--color-gold-500),
+              0 8px 32px rgba(197, 155, 72, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   14. FOOTER
+   -------------------------------------------------------------------------- */
+
+footer a,
+footer button {
+  transition: color var(--transition);
+}
+
+/* Separador decorativo dorado en footer */
+footer .brand-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-gold-500) 30%,
+    var(--color-gold-500) 70%,
+    transparent
+  );
+  opacity: 0.25;
+}
+
+/* --------------------------------------------------------------------------
+   15. RESPONSIVE — AJUSTES FINOS
+   -------------------------------------------------------------------------- */
+
+/* Tablets pequeñas: evitar desborde en tarjetas de servicios */
+@media (max-width: 640px) {
+  .service-card {
+    padding: 1.5rem;
+  }
+
+  /* Reducir tamaño del hero H1 en móvil muy pequeño */
+  #inicio h1 {
+    font-size: clamp(2rem, 8vw, 3rem);
+    line-height: 1.15;
+  }
+}
+
+/* Desktop amplio: aprovechar el espacio adicional */
+@media (min-width: 1280px) {
+  #inicio h1 {
+    font-size: 3.75rem; /* 60px */
+    line-height: 1.1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   16. PRINT (Impresión)
+   Ocultar elementos interactivos al imprimir la página.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  header,
+  .floating-cta,
+  #privacy-modal,
+  #mobile-menu-btn {
+    display: none !important;
+  }
+
+  body {
+    color: #000;
+    background: #fff;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+  }
+}
